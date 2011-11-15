@@ -1,9 +1,15 @@
 package main
 
 import (
-    "fmt"
     "bufio"
+    "fmt"
     "os"
+    "regexp"
+)
+
+var (
+    digit = regexp.MustCompile("^[0-9].*")
+    validCardRune = regexp.MustCompile("[\\- 0-9]")
 )
 
 // left <- first digit
@@ -24,6 +30,25 @@ func (masker IdentityMasker) Mask(line string) string {
     return line
 }
 
+type IterativeMasker struct {}
+
+func (masker IterativeMasker) Mask(line string) string {
+    slice := make([]int, len(line))
+    for idx, rune := range line {
+        slice[idx] = rune
+    }
+    return string(slice)
+}
+
+// Return the position of the first digit with a position >= start.
+func firstDigitAfter(runes string, start int) int {
+    pos := start
+    for !digit.MatchString(runes[pos:]) {
+        pos++;
+    }
+    return pos
+}
+
 func handleLine(line string, masker CardMasker) string {
     return masker.Mask(line)
 }
@@ -31,7 +56,7 @@ func handleLine(line string, masker CardMasker) string {
 func main() {
     reader := bufio.NewReader(os.Stdin)
     line, err := reader.ReadString('\n')
-    var masker IdentityMasker
+    var masker IterativeMasker
     for err == nil {
         fmt.Print(handleLine(line, masker))
         line, err = reader.ReadString('\n')
