@@ -14,11 +14,26 @@ import (
 // keep track of last character output, if check succeeds output from pos to right
 // start again with next character after right
 
+type CardMasker interface {
+    Mask(line string) string
+}
+
+type IdentityMasker struct {}
+
+func (masker IdentityMasker) Mask(line string) string {
+    return line
+}
+
+func handleLine(line string, masker CardMasker) string {
+    return masker.Mask(line)
+}
+
 func main() {
     reader := bufio.NewReader(os.Stdin)
     line, err := reader.ReadString('\n')
+    var masker IdentityMasker
     for err == nil {
-        fmt.Print(line)
+        fmt.Print(handleLine(line, masker))
         line, err = reader.ReadString('\n')
     }
     if err != os.EOF {
