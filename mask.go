@@ -25,18 +25,6 @@ func isValidCardRune(r rune) bool {
     return isDigit(r) || r == ' ' || r == '-'
 }
 
-func isLunhy(digits []int) bool {
-    sum := 0
-    for offset := 1; offset <= len(digits); offset++ {
-        pos := len(digits) - offset;
-        if offset % 2 == 0 {
-            digits[pos] *= 2
-        }
-        sum += sumDigits(digits[pos])
-    }
-    return (sum % 10) == 0
-}
-
 func sumDigits(n int) (sum int) {
     sum = 0
     for n > 0 {
@@ -63,27 +51,6 @@ func NewRuneBuffer(s string) RuneBuffer {
 
 func (buffer RuneBuffer) String() string {
     return string(buffer.output)
-}
-
-func (buffer *RuneBuffer) MaskDigits(left, right int) {
-    for left < right {
-        r := buffer.source[left]
-        if isDigit(r) {
-            buffer.output[left] = 'X'
-        }
-        left++
-    }
-}
-
-func (buffer *RuneBuffer) GetDigits(left, right int) (digits []int) {
-    for left < right {
-        r := buffer.source[left]
-        if isDigit(r) {
-            digits = append(digits, r - '0')
-        }
-        left++
-    }
-    return
 }
 
 func (buffer RuneBuffer) firstDigit() int {
