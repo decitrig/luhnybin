@@ -67,7 +67,7 @@ func (runeString RuneBuffer) String() string {
 }
 
 func (runeString *RuneBuffer) MaskDigits(left, right int) {
-    for left <= right {
+    for left < right {
         r := runeString.source[left]
         if isDigit(r) {
             runeString.output[left] = 'X'
@@ -77,7 +77,7 @@ func (runeString *RuneBuffer) MaskDigits(left, right int) {
 }
 
 func (runeString *RuneBuffer) GetDigits(left, right int) (digits []int) {
-    for left <= right {
+    for left < right {
         r := runeString.source[left]
         if isDigit(r) {
             digits = append(digits, r - '0')
@@ -103,7 +103,7 @@ func (runeString RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) 
     if pos < 0 {
         return
     }
-	for pos < len(runeString.source) && n > 1 {
+	for pos < len(runeString.source) && n > 0 {
         r := runeString.source[pos]
         if !isValidCardRune(r) {
             return
