@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"unicode/utf8"
 )
 
 var (
@@ -42,49 +41,104 @@ func (masker IdentityMasker) Mask(line string) string {
 	return line
 }
 
+func isDigit(r rune) bool {
+    return (r >= '0') && (r <= '9')
+}
+
+func isValidCardRune(r rune) bool {
+    return isDigit(r) || r == ' ' || r == '-'
+}
+
+
+type RuneBuffer struct {
+    source []rune
+    output []rune
+}
+
+func NewRuneBuffer(s string) RuneBuffer {
+    source := make([]rune, len(s))
+    for i, r := range s {
+        source[i] = r
+    }
+    output := make([]rune, len(s))
+    copy(output, source)
+    return RuneBuffer{source, output}
+}
+
+func (runeString RuneBuffer) String() string {
+    return string(runeString.output)
+}
+
+func (runeString *RuneBuffer) MaskDigits(left, right int) {
+    for left <= right {
+        r := runeString.source[left]
+        if isDigit(r) {
+            runeString.output[left] = 'X'
+        }
+        left++
+    }
+}
+
+func (runeString RuneBuffer) firstDigitAfter(start int) int {
+    for start < len(runeString.source) {
+        if isDigit(runeString.source[start]) {
+            return start;
+        }
+        start++
+    }
+    return -1;
+}
+
+func (runeString RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) {
+	pos = start
+    ok = false
+	for n > 1 {
+        r := runeString.source[pos]
+        if !isValidCardRune(r) {
+            return
+        }
+        if isDigit(r) {
+            n--
+		}
+		pos++
+	}
+    ok = true
+	return
+}
+
+func (runeString RuneBuffer) size() int {
+    return len(runeString.source)
+}
+
 type IterativeMasker struct{}
 
 func (masker IterativeMasker) Mask(line string) string {
-	src := utf8.NewString(line)
-	output := make([]int, len(line))
-
-	left := firstDigitAfter(line, 0)
-	right := findNthDigitAfter(line, left, 14)
-	nextOut := 0
-	for nextOut < left {
-		output[nextOut] = src.At(nextOut)
-		nextOut++
-	}
-	assert(left == nextOut, "next output must be first digit")
-
-	return string(output)
+    output := NewRuneBuffer(line)
+    left := output.firstDigitAfter(0)
+    for left < output.size() {
+        for n := 14; n <= 16; n++ {
+            right, ok := output.findNthDigitAfter(left, n)
+            if ok {
+                output.MaskDigits(left, right)
+            } else {
+                // skip a short run of digits
+                left = right
+                break;
+            }
+        }
+        left++
+    }
+	return output.String()
 }
 
-// Return the position of the first digit with a position >= start.
-func firstDigitAfter(runes string, start int) int {
-	pos := start
-	for pos < len(runes) && !digit.MatchString(runes[pos:]) {
-		pos++
-	}
-	return pos
+func maskDigits(runes []rune) {
+    for pos, r := range runes {
+        if digit.MatchString(string(r)) {
+            runes[pos] = 'X'
+        }
+    }
 }
 
-// Return one past the position of the nth digit after start. Digits may be
-// interspersed with spaces and dashes, but if an invalid card rune is found
-// before n digits are consumed, return -1;
-func findNthDigitAfter(runes string, start int, n int) int {
-	pos := start
-	for n > 1 {
-		if !validCardRune.MatchString(runes[pos:]) {
-			return -1
-		}
-		if digit.MatchString(runes[pos:]) {
-			n--
-		}
-		pos++
-	}
-	return pos
-}
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
