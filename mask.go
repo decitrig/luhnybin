@@ -92,7 +92,10 @@ func (runeString RuneBuffer) firstDigitAfter(start int) int {
 func (runeString RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) {
 	pos = start
     ok = false
-	for n > 1 {
+    if pos < 0 {
+        return
+    }
+	for pos < len(runeString.source) && n > 1 {
         r := runeString.source[pos]
         if !isValidCardRune(r) {
             return
