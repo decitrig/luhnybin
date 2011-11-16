@@ -14,7 +14,7 @@ func assert(cond bool, message string) {
 }
 
 func debug(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format+"\n", args...)
+	fmt.Fprintf(os.Stdout, format+"\n", args...)
 }
 
 func isDigit(r rune) bool {
@@ -95,24 +95,38 @@ func (buffer RuneBuffer) firstDigit() int {
     return -1;
 }
 
-func (buffer RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) {
-	pos = start
-    ok = false
-    if pos < 0 {
+func (buffer RuneBuffer) tryToMask(start, n int) {
+    if start < 0 {
         return
     }
-	for pos < len(buffer.source) && n > 0 {
+    sum := 0
+    digitsFound := 0
+    toMask := make([]int, 0, n)
+    for pos := start; pos < len(buffer.source); pos++ {
         r := buffer.source[pos]
         if !isValidCardRune(r) {
             return
         }
         if isDigit(r) {
-            n--
-		}
-		pos++
-	}
-    ok = true
-	return
+            digitsFound++
+            toMask = append(toMask, pos)
+            digit := r - '0'
+            if ((n - digitsFound) % 2 == 0) {
+                sum += sumDigits(digit)
+            } else {
+                sum += sumDigits(digit * 2)
+            }
+        }
+        if digitsFound == n {
+            break;
+        }
+    }
+    if (sum % 10) != 0 {
+        return
+    }
+    for _, idx := range toMask {
+        buffer.output[idx] = 'X'
+    }
 }
 
 func (buffer RuneBuffer) size() int {
@@ -124,17 +138,7 @@ func mask(line string) string {
     left := output.firstDigit()
     for left < output.size() {
         for n := 14; n <= 16; n++ {
-            right, ok := output.findNthDigitAfter(left, n)
-            if ok {
-                digits := output.GetDigits(left, right)
-                if isLunhy(digits) {
-                    output.MaskDigits(left, right)
-                }
-            } else {
-                // skip a short run of digits
-                left = right
-                break;
-            }
+            output.tryToMask(left, n)
         }
         left++
     }
