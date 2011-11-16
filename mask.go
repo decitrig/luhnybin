@@ -5,12 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
-)
-
-var (
-	digit         = regexp.MustCompile("^[0-9].*")
-	validCardRune = regexp.MustCompile(`^([\-0-9 ]).*`)
 )
 
 func assert(cond bool, message string) {
@@ -49,6 +43,27 @@ func isValidCardRune(r rune) bool {
     return isDigit(r) || r == ' ' || r == '-'
 }
 
+func isLunhy(digits []int) bool {
+    sum := 0
+    for offset := 1; offset <= len(digits); offset++ {
+        pos := len(digits) - offset;
+        if offset % 2 == 0 {
+            digits[pos] *= 2
+        }
+        sum += sumDigits(digits[pos])
+    }
+    return (sum % 10) == 0
+}
+
+func sumDigits(n int) (sum int) {
+    sum = 0
+    for n > 0 {
+        sum += n % 10
+        n /= 10
+    }
+    return
+}
+
 
 type RuneBuffer struct {
     source []rune
@@ -77,6 +92,17 @@ func (runeString *RuneBuffer) MaskDigits(left, right int) {
         }
         left++
     }
+}
+
+func (runeString *RuneBuffer) GetDigits(left, right int) (digits []int) {
+    for left <= right {
+        r := runeString.source[left]
+        if isDigit(r) {
+            digits = append(digits, r - '0')
+        }
+        left++
+    }
+    return
 }
 
 func (runeString RuneBuffer) firstDigitAfter(start int) int {
@@ -122,7 +148,10 @@ func (masker IterativeMasker) Mask(line string) string {
         for n := 14; n <= 16; n++ {
             right, ok := output.findNthDigitAfter(left, n)
             if ok {
-                output.MaskDigits(left, right)
+                digits := output.GetDigits(left, right)
+                if isLunhy(digits) {
+                    output.MaskDigits(left, right)
+                }
             } else {
                 // skip a short run of digits
                 left = right
@@ -133,15 +162,6 @@ func (masker IterativeMasker) Mask(line string) string {
     }
 	return output.String()
 }
-
-func maskDigits(runes []rune) {
-    for pos, r := range runes {
-        if digit.MatchString(string(r)) {
-            runes[pos] = 'X'
-        }
-    }
-}
-
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
