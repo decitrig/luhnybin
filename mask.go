@@ -50,10 +50,6 @@ func (masker IterativeMasker) Mask(line string) string {
 
 	left := firstDigitAfter(line, 0)
 	right := findNthDigitAfter(line, left, 14)
-	debug("left: %d, right: %d\n", left, right)
-	if right > 0 {
-		debug("number: %s\n", line[left:right])
-	}
 	nextOut := 0
 	for nextOut < left {
 		output[nextOut] = src.At(nextOut)
@@ -73,14 +69,13 @@ func firstDigitAfter(runes string, start int) int {
 	return pos
 }
 
-// Return position of nth digit after start. Digits may be interspersed with
-// spaces and dashes, but if an invalid card rune is found before n, return -1;
+// Return one past the position of the nth digit after start. Digits may be
+// interspersed with spaces and dashes, but if an invalid card rune is found
+// before n digits are consumed, return -1;
 func findNthDigitAfter(runes string, start int, n int) int {
 	pos := start
 	for n > 1 {
-		debug("n: %d, runes: %s", n, runes[pos:])
 		if !validCardRune.MatchString(runes[pos:]) {
-			debug("invalid rune starts '%s'", runes[pos:])
 			return -1
 		}
 		if digit.MatchString(runes[pos:]) {
