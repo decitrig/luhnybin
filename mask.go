@@ -46,7 +46,6 @@ func sumDigits(n int) (sum int) {
     return
 }
 
-
 type RuneBuffer struct {
     source []rune
     output []rune
@@ -62,23 +61,23 @@ func NewRuneBuffer(s string) RuneBuffer {
     return RuneBuffer{source, output}
 }
 
-func (runeString RuneBuffer) String() string {
-    return string(runeString.output)
+func (buffer RuneBuffer) String() string {
+    return string(buffer.output)
 }
 
-func (runeString *RuneBuffer) MaskDigits(left, right int) {
+func (buffer *RuneBuffer) MaskDigits(left, right int) {
     for left < right {
-        r := runeString.source[left]
+        r := buffer.source[left]
         if isDigit(r) {
-            runeString.output[left] = 'X'
+            buffer.output[left] = 'X'
         }
         left++
     }
 }
 
-func (runeString *RuneBuffer) GetDigits(left, right int) (digits []int) {
+func (buffer *RuneBuffer) GetDigits(left, right int) (digits []int) {
     for left < right {
-        r := runeString.source[left]
+        r := buffer.source[left]
         if isDigit(r) {
             digits = append(digits, r - '0')
         }
@@ -87,24 +86,23 @@ func (runeString *RuneBuffer) GetDigits(left, right int) (digits []int) {
     return
 }
 
-func (runeString RuneBuffer) firstDigitAfter(start int) int {
-    for start < len(runeString.source) {
-        if isDigit(runeString.source[start]) {
+func (buffer RuneBuffer) firstDigit() int {
+    for start := 0; start < len(buffer.source); start++ {
+        if isDigit(buffer.source[start]) {
             return start;
         }
-        start++
     }
     return -1;
 }
 
-func (runeString RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) {
+func (buffer RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) {
 	pos = start
     ok = false
     if pos < 0 {
         return
     }
-	for pos < len(runeString.source) && n > 0 {
-        r := runeString.source[pos]
+	for pos < len(buffer.source) && n > 0 {
+        r := buffer.source[pos]
         if !isValidCardRune(r) {
             return
         }
@@ -117,13 +115,13 @@ func (runeString RuneBuffer) findNthDigitAfter(start, n int) (pos int, ok bool) 
 	return
 }
 
-func (runeString RuneBuffer) size() int {
-    return len(runeString.source)
+func (buffer RuneBuffer) size() int {
+    return len(buffer.source)
 }
 
 func mask(line string) string {
     output := NewRuneBuffer(line)
-    left := output.firstDigitAfter(0)
+    left := output.firstDigit()
     for left < output.size() {
         for n := 14; n <= 16; n++ {
             right, ok := output.findNthDigitAfter(left, n)
