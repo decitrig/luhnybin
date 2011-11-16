@@ -121,9 +121,7 @@ func (runeString RuneBuffer) size() int {
     return len(runeString.source)
 }
 
-type IterativeMasker struct{}
-
-func (masker IterativeMasker) Mask(line string) string {
+func mask(line string) string {
     output := NewRuneBuffer(line)
     left := output.firstDigitAfter(0)
     for left < output.size() {
@@ -148,9 +146,8 @@ func (masker IterativeMasker) Mask(line string) string {
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
-	var masker IterativeMasker
 	for err == nil {
-		fmt.Print(masker.Mask(line))
+		fmt.Print(mask(line))
 		line, err = reader.ReadString('\n')
 	}
 	if err != io.EOF {
