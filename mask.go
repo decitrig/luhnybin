@@ -62,9 +62,22 @@ func (buffer RuneBuffer) firstDigit() int {
     return -1;
 }
 
-func (buffer RuneBuffer) tryToMask(start, n int) {
+func (buffer RuneBuffer) nextDigit(pos int) int {
+    for start := pos; start < len(buffer.source); start++ {
+        if isDigit(buffer.source[start]) {
+            return start;
+        }
+    }
+    return -1;
+}
+
+
+// Looks for a string of n digits starting at start. If n digits are found that
+// pass the Luhn check, it masks them out of the output.
+// Returns the next position to start from
+func (buffer RuneBuffer) tryToMask(start, n int) int {
     if start < 0 {
-        return
+        return -1
     }
     sum := 0
     digitsFound := 0
@@ -72,7 +85,7 @@ func (buffer RuneBuffer) tryToMask(start, n int) {
     for pos := start; pos < len(buffer.source); pos++ {
         r := buffer.source[pos]
         if !isValidCardRune(r) {
-            return
+            return pos + 1
         }
         if isDigit(r) {
             digitsFound++
@@ -89,11 +102,12 @@ func (buffer RuneBuffer) tryToMask(start, n int) {
         }
     }
     if (sum % 10) != 0 {
-        return
+        return start + 1
     }
     for _, idx := range toMask {
         buffer.output[idx] = 'X'
     }
+    return start + 1
 }
 
 func (buffer RuneBuffer) size() int {
@@ -107,7 +121,10 @@ func mask(line string) string {
         for n := 14; n <= 16; n++ {
             output.tryToMask(left, n)
         }
-        left++
+        left = output.nextDigit(left + 1)
+        if left < 0 {
+            break
+        }
     }
 	return output.String()
 }
